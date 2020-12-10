@@ -1,160 +1,183 @@
 package ru.fbtw.navigator.rest_api_service.navigation;
 
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 public class MultiLevelNode extends Node {
 
-	private HashMap<Level, Node> joinedNodes;
-	private boolean hasUpdate;
+    private HashMap<Level, Node> joinedNodes;
+    private boolean hasUpdate;
 
-	public MultiLevelNode(Node parent) {
-		super(
-				parent.getX(),
-				parent.getY(),
-				parent.getDescription(),
-				parent.getName(),
-				parent.getParent(),
-				parent.getType(),
-				parent.isPrime()
-		);
+    public MultiLevelNode(Node parent) {
+        super(
+                parent.getX(),
+                parent.getY(),
+                parent.getDescription(),
+                parent.getName(),
+                parent.getParent(),
+                parent.getType(),
+                parent.isPrime()
+        );
 
-		joinedNodes = new HashMap<>();
-		add(parent);
-	}
+        joinedNodes = new HashMap<>();
+        add(parent);
+    }
 
-	public HashMap<Level, Node> getJoinedNodes() {
-		return joinedNodes;
-	}
+    public HashMap<Level, Node> getJoinedNodes() {
+        return joinedNodes;
+    }
 
-	public void add(Node other) {
-		hasUpdate = true;
-		joinedNodes.put(other.getParent(), other);
+    public void add(Node other) {
+        hasUpdate = true;
+        joinedNodes.put(other.getParent(), other);
 
-		// replace other Neighbour to primeNode
-		for(Node otherNeighbour : other.getNeighbours()){
-			otherNeighbour.getNeighbours().remove(other);
-			otherNeighbour.getNeighbours().add(this);
-		}
-		// add other Neighbours to primeNode Neighbours
-		addNeighbours(other.getNeighbours());
+        // replace other Neighbour to primeNode
+        for (Node otherNeighbour : other.getNeighbours()) {
+            otherNeighbour.getNeighbours().remove(other);
+            otherNeighbour.getNeighbours().add(this);
+        }
+        // add other Neighbours to primeNode Neighbours
+        addNeighbours(other.getNeighbours());
 
-		// save current node to other`s parent level system
-		other.getParent().getNodeSystem().remove(other);
-		other.getParent().getNodeSystem().add(this);
-	}
+        // save current node to other`s parent level system
+        other.getParent().getNodeSystem().remove(other);
+        other.getParent().getNodeSystem().add(this);
+    }
 
-	@Override
-	public HashSet<String> getPseudoNames() {
+    @Override
+    public HashSet<String> getPseudoNames() {
 
-		if (hasUpdate) {
-			joinedNodes.values()
-					.stream()
-					.filter(Node::isPrime)
-					.map(Node::getName)
-					.forEach(pseudoNames::add);
-			hasUpdate = false;
-		}
+        if (hasUpdate) {
+            joinedNodes.values()
+                    .stream()
+                    .filter(Node::isPrime)
+                    .map(Node::getName)
+                    .forEach(pseudoNames::add);
+            hasUpdate = false;
+        }
 
-		return pseudoNames;
-	}
+        return pseudoNames;
+    }
 
 
-	@Override
-	public int getX(Level context) {
-		return joinedNodes.get(context).getX();
-	}
+    @Override
+    public int getX(Level context) {
+        return joinedNodes.get(context).getX();
+    }
 
-	@Override
-	public int getY(Level context) {
-		return joinedNodes.get(context).getY();
-	}
+    @Override
+    public int getY(Level context) {
+        return joinedNodes.get(context).getY();
+    }
 
-	@Override
-	public String getName(Level context) {
-		return joinedNodes.get(context).getName();
-	}
+    @Override
+    public String getName(Level context) {
+        return joinedNodes.get(context).getName();
+    }
 
-	@Override
-	public Level getParent(Level context) {
-		return joinedNodes.get(context).getParent();
-	}
+    @Override
+    public Level getParent(Level context) {
+        return joinedNodes.get(context).getParent();
+    }
 
-	@Override
-	public NodeType getType(Level context) {
-		return joinedNodes.get(context).getType();
-	}
+    @Override
+    public NodeType getType(Level context) {
+        return joinedNodes.get(context).getType();
+    }
 
-	@Override
-	public boolean isPrime(Level context) {
-		return joinedNodes.get(context).isPrime();
-	}
+    @Override
+    public boolean isPrime(Level context) {
+        return joinedNodes.get(context).isPrime();
+    }
 
-	@Override
-	public String getDescription(Level context) {
-		return joinedNodes.get(context).getDescription();
-	}
+    @Override
+    public String getDescription(Level context) {
+        return joinedNodes.get(context).getDescription();
+    }
 
-	/**
-	 * @deprecated - Use {@link #getX(Level)} instead
-	 * */
-	@Deprecated
-	@Override
-	public int getX() {
-		return super.getX();
-	}
+    /**
+     * @deprecated - Use {@link #getX(Level)} instead
+     */
+    @Deprecated
+    @Override
+    public int getX() {
+        return super.getX();
+    }
 
-	/**
-	 * @deprecated - Use {@link #getY(Level)} instead
-	 * */
-	@Deprecated
-	@Override
-	public int getY() {
-		return super.getY();
-	}
+    /**
+     * @deprecated - Use {@link #getY(Level)} instead
+     */
+    @Deprecated
+    @Override
+    public int getY() {
+        return super.getY();
+    }
 
-	/**
-	 * @deprecated - Use {@link #getName(Level)}  instead
-	 * */
-	@Deprecated
-	@Override
-	public String getName() {
-		return super.getName();
-	}
+    /**
+     * @deprecated - Use {@link #getName(Level)}  instead
+     */
+    @Deprecated
+    @Override
+    public String getName() {
+        return super.getName();
+    }
 
-	/**
-	 * @deprecated - Use {@link #getParent(Level)}  instead
-	 * */
-	@Deprecated
-	@Override
-	public Level getParent() {
-		return super.getParent();
-	}
+    /**
+     * @deprecated - Use {@link #getParent(Level)}  instead
+     */
+    @Deprecated
+    @Override
+    public Level getParent() {
+        return super.getParent();
+    }
 
-	/**
-	 * @deprecated - Use {@link #getX(Level)} instead
-	 * */
-	@Deprecated
-	@Override
-	public NodeType getType() {
-		return super.getType();
-	}
+    /**
+     * @deprecated - Use {@link #getX(Level)} instead
+     */
+    @Deprecated
+    @Override
+    public NodeType getType() {
+        return super.getType();
+    }
 
-	/**
-	 * @deprecated - Use {@link #isPrime(Level)} instead
-	 * */
-	@Deprecated
-	@Override
-	public boolean isPrime() {
-		return super.isPrime();
-	}
+    /**
+     * @deprecated - Use {@link #isPrime(Level)} instead
+     */
+    @Deprecated
+    @Override
+    public boolean isPrime() {
+        return super.isPrime();
+    }
 
-	/**
-	 * @deprecated - Use {@link #getDescription(Level)} instead
-	 * */
-	@Deprecated
-	@Override
-	public String getDescription() {
-		return super.getDescription();
-	}
+    /**
+     * @deprecated - Use {@link #getDescription(Level)} instead
+     */
+    @Deprecated
+    @Override
+    public String getDescription() {
+        return super.getDescription();
+    }
+
+    @Override
+    public Map<String, Object> toMap() {
+        final String levelFormat = "level%d";
+        final String xFormat = "x-%s";
+        final String yFormat = "x-%s";
+
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("isMusty", true);
+        map.put("name", getName());
+        map.put("type", getType().ordinal());
+        map.put("level_count", joinedNodes.size());
+
+        Iterator<Level> levels = joinedNodes.keySet().iterator();
+        for (int i = 0; i < joinedNodes.size(); i++) {
+            Level level = levels.next();
+            map.put(String.format(levelFormat, i), level.getName());
+            map.put(String.format(xFormat, level.getName()), getX(level));
+            map.put(String.format(yFormat, level.getName()), getY(level));
+        }
+
+        return map;
+    }
 }

@@ -4,8 +4,12 @@ package ru.fbtw.navigator.rest_api_service.math;
 import ru.fbtw.navigator.rest_api_service.navigation.Level;
 import ru.fbtw.navigator.rest_api_service.navigation.MultiLevelNode;
 import ru.fbtw.navigator.rest_api_service.navigation.Node;
+import ru.fbtw.navigator.rest_api_service.service.Mappable;
 
-public class Edge implements Comparable<Edge>{
+import java.util.HashMap;
+import java.util.Map;
+
+public class Edge implements Comparable<Edge> , Mappable {
 	private GraphNode a;
 	private GraphNode b;
 	private Level level;
@@ -106,5 +110,16 @@ public class Edge implements Comparable<Edge>{
 			return false;
 		}
 
+	}
+
+	@Override
+	public Map<String, Object> toMap() {
+		Map<String,Object> map = new HashMap<>();
+
+		map.put("a",getA().getBaseNode().getName());
+		map.put("b",getB().getBaseNode().getName());
+		map.put("len",length);
+
+		return map;
 	}
 }

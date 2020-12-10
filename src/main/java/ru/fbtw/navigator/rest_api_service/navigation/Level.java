@@ -1,8 +1,12 @@
 package ru.fbtw.navigator.rest_api_service.navigation;
 
-import java.util.ArrayList;
+import ru.fbtw.navigator.rest_api_service.service.Mappable;
 
-public class Level {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Level implements Mappable {
 	private String image;
 	private String name;
 
@@ -37,5 +41,13 @@ public class Level {
 	}
 
 
+	@Override
+	public Map<String, Object> toMap() {
+		Map<String, Object> map = new HashMap<>();
 
+		map.put("name", name);
+		map.put("image",image);
+
+		return map;
+	}
 }

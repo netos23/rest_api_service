@@ -1,6 +1,7 @@
 package ru.fbtw.navigator.rest_api_service.math;
 
 import lombok.extern.slf4j.Slf4j;
+import ru.fbtw.navigator.rest_api_service.navigation.Level;
 import ru.fbtw.navigator.rest_api_service.navigation.Node;
 
 import java.util.*;
@@ -16,7 +17,7 @@ public class GraphSolver {
 	/**
 	 * Key-value storage of nodes for fast searching by name
 	 */
-	private HashMap<String, Node> nodesStorage;
+	private Map<String, Node> nodesStorage;
 
 	/**
 	 * List of {@link GraphNode} for searching in the graph of the nodes
@@ -26,20 +27,18 @@ public class GraphSolver {
 	/**
 	 * Unique nodes, includes node of type{@code NodeType.TEMP}
 	 */
-	private HashSet<Node> uniqueNodes;
-
-	/**
-	 * Key-value storage of GraphNodes for fast searching by Node
-	 */
-	private HashMap<Node, GraphNode> graphNodeStorage;
-
-	private GraphNodeComparator comparator;
+	private Set<Node> uniqueNodes;
+	private Set<Level> levels;
+	private Set<Edge> edges;
 
 
-	public GraphSolver(HashMap<String, Node> nodesStorage, HashSet<Node> privateNodes) {
+	public GraphSolver(Map<String, Node> nodesStorage, Set<Node> privateNodes) {
 		this.nodesStorage = nodesStorage;
 		uniqueNodes = privateNodes;
-		comparator = new GraphNodeComparator();
+
+		levels = new HashSet<>();
+		edges = new HashSet<>();
+
 		//testSecurity();
 		if(!isSecure){
 			log.warn("The node system is not closed. This can lead to errors");
@@ -71,8 +70,12 @@ public class GraphSolver {
 	private void initGraph() {
 		// setup nodes
 		graphNodes = new ArrayList<>();
-		graphNodeStorage = new HashMap<>();
+		/**
+		 * Key-value storage of GraphNodes for fast searching by Node
+		 */
+		HashMap<Node, GraphNode> graphNodeStorage = new HashMap<>();
 		for (Node node : uniqueNodes) {
+			levels.add(node.getParent());
 			GraphNode graphNode = new GraphNode(node);
 			graphNodes.add(graphNode);
 			graphNodeStorage.put(node, graphNode);
@@ -85,6 +88,7 @@ public class GraphSolver {
 				GraphNode nodeB = graphNodeStorage.get(neighbour);
 
 				Edge edge = new Edge(nodeA, nodeB);
+				edges.add(edge);
 				if(!nodeA.getConnections().contains(edge)) {
 					nodeA.getConnections().add(edge);
 					nodeB.getConnections().add(edge);
@@ -100,60 +104,6 @@ public class GraphSolver {
 		restoreNodes();
 	}
 
-	public List<GraphNode> getPath(String targetName, String startName) throws Exception {
-		Node target = nodesStorage.get(targetName);
-		Node start = nodesStorage.get(startName);
-
-		if (target != null && start != null) {
-			return searchPath(target, start);
-		} else {
-			return null;
-		}
-	}
-
-	private List<GraphNode> searchPath(Node target, Node origin) throws Exception{
-		restoreNodes();
-
-		GraphNode start = graphNodeStorage.get(origin);
-		GraphNode finish = graphNodeStorage.get(target);
-
-		start.setDestination(0);
-		graphNodes.sort(comparator);
-
-		while (!graphNodes.get(0).isFinal()) {
-			GraphNode selected = graphNodes.get(0);
-			for (Edge edge : selected.getConnections()) {
-				if (!edge.isChecked()) {
-					GraphNode other = edge.getOther(selected);
-					edge.setChecked(true);
-					if (other.getDestination() > selected.getDestination() + edge.getLength()) {
-						other.setDestination(selected.getDestination() + edge.getLength());
-						other.setPrev(selected);
-					}
-				}
-			}
-			selected.setFinal(true);
-
-			graphNodes.sort(comparator);
-		}
-
-		LinkedList<GraphNode> path = new LinkedList<>();
-		path.add(finish);
-		GraphNode prev;
-
-		do{
-			prev = path.peekLast().getPrev();
-			if(prev != null){
-				path.add(prev);
-			}else{
-				if(!path.peekLast().equals(start)){
-					throw new Exception("Wrong path");
-				}
-			}
-		}while (prev != null);
-
-		return path;
-	}
 
 	private void restoreNodes() {
 		for (GraphNode node : graphNodes) {
@@ -166,8 +116,15 @@ public class GraphSolver {
 		}
 	}
 
-
 	public boolean isSecure() {
 		return isSecure;
+	}
+
+	public Set<Level> getLevels() {
+		return levels;
+	}
+
+	public Set<Edge> getEdges() {
+		return edges;
 	}
 }

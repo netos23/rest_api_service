@@ -4,6 +4,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import org.springframework.stereotype.Component;
 import ru.fbtw.navigator.rest_api_service.navigation.Level;
 import ru.fbtw.navigator.rest_api_service.navigation.MultiLevelNode;
 import ru.fbtw.navigator.rest_api_service.navigation.Node;
