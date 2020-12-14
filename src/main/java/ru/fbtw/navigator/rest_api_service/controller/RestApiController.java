@@ -1,13 +1,9 @@
 package ru.fbtw.navigator.rest_api_service.controller;
 
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import ru.fbtw.navigator.rest_api_service.service.RedirectService;
-import ru.fbtw.navigator.rest_api_service.service.ResponseService;
-import ru.fbtw.navigator.rest_api_service.service.ResponseType;
-import ru.fbtw.navigator.rest_api_service.service.UpdateService;
+import org.springframework.web.bind.annotation.*;
+import ru.fbtw.navigator.rest_api_service.security.AuthRequest;
+import ru.fbtw.navigator.rest_api_service.security.AuthResponse;
+import ru.fbtw.navigator.rest_api_service.service.*;
 
 @RestController
 @RequestMapping("/api")
@@ -24,15 +20,27 @@ public class RestApiController {
         this.responseService = responseService;
     }
 
-    @RequestMapping("/update")
+    @RequestMapping("/update_project")
     public String updateMap(
             @RequestParam String apiKey,
             @RequestBody String jsonBody
     ) {
         String userId = "";
-        boolean successUpdate = parserService.updateMap(userId,jsonBody,false);
+        boolean successUpdate = parserService.updateMap(userId, jsonBody, false);
 
-       return "true";
+        return "true";
     }
+
+    @RequestMapping("/create_project")
+    public String createProject() {
+        return "";
+    }
+
+    @RequestMapping("/remove_project")
+    public String removeProject() {
+        return "";
+    }
+
+
 
 }
