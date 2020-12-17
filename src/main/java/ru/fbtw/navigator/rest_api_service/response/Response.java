@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;
-import ru.fbtw.navigator.rest_api_service.response.BaseResponse;
 
 @Getter
 @Setter

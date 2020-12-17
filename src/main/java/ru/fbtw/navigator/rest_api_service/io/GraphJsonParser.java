@@ -4,17 +4,17 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 import ru.fbtw.navigator.rest_api_service.navigation.Level;
 import ru.fbtw.navigator.rest_api_service.navigation.MultiLevelNode;
 import ru.fbtw.navigator.rest_api_service.navigation.Node;
 import ru.fbtw.navigator.rest_api_service.navigation.NodeType;
 
-
 import java.io.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class GraphJsonParser {
     private JsonObject root;
 
@@ -76,7 +76,8 @@ public class GraphJsonParser {
                 MultiLevelNode node = new MultiLevelNode(socketA);
                 node.add(socketB);
             } catch (NullPointerException ex) {
-                //todo: лог об ощибке соединения нодов
+                log.error("Error while connect nodes: missing node");
+                ex.printStackTrace();
             }
         }
     }
