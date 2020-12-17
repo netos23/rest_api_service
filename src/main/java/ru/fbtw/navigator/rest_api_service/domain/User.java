@@ -33,6 +33,9 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     Set<Role> roles;
 
+    @OneToMany(mappedBy = "owner",cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    Set<Project> projects;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import ru.fbtw.navigator.rest_api_service.domain.Role;
 import ru.fbtw.navigator.rest_api_service.security.JwtFilter;
 
 @Configuration
@@ -32,6 +33,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                     .authorizeRequests()
                     .antMatchers( "/auth").permitAll()
+                .and()
+                    .authorizeRequests()
+                    .anyRequest().authenticated()
                 .and()
                     .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
     }

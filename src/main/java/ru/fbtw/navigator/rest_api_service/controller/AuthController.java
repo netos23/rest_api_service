@@ -4,6 +4,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import ru.fbtw.navigator.rest_api_service.domain.User;
+import ru.fbtw.navigator.rest_api_service.security.AuthRequest;
+import ru.fbtw.navigator.rest_api_service.security.AuthResponse;
+import ru.fbtw.navigator.rest_api_service.response.BaseResponse;
+import ru.fbtw.navigator.rest_api_service.response.Response;
 import ru.fbtw.navigator.rest_api_service.security.*;
 import ru.fbtw.navigator.rest_api_service.service.UserService;
 
@@ -24,6 +28,6 @@ public class AuthController {
             String token = jwtProvider.generateToken(user.getUsername());
             return new AuthResponse(token);
         }
-        return new WrongResponse("Permisssion denied", 403);
+        return new Response("Permisssion denied", 403);
     }
 }
