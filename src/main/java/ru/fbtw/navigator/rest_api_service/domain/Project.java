@@ -28,6 +28,8 @@ public class Project {
     String telegramApiKey;
     String appName;
     String userPackage;
+
+    @Column(length = 10000000)
     String body;
 
     @ManyToOne(fetch = FetchType.EAGER)

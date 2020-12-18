@@ -56,6 +56,8 @@ public class ProjectService {
             newProject.setAppName(project.getAppName());
             newProject.setUserPackage(project.getUserPackage());
 
+            newProject.setBody(project.getBody());
+
             projectRepo.save(newProject);
             //todo: обновить платформы
             return true;
