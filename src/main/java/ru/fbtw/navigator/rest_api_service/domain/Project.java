@@ -15,7 +15,7 @@ import java.util.Set;
 public class Project {
     @Id
     @GeneratedValue(strategy= GenerationType.AUTO)
-    private Long id;
+    Long id;
 
     String name;
 
@@ -34,7 +34,9 @@ public class Project {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
-    User owner;
+	User owner;
+
+
 
     public Project(){
 

@@ -1,6 +1,6 @@
 package ru.fbtw.navigator.rest_api_service.domain;
 
-import lombok.AccessLevel;
+    import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.FieldDefaults;

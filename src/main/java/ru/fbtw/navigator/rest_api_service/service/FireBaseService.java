@@ -7,102 +7,156 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import ru.fbtw.navigator.rest_api_service.io.GraphJsonParser;
 import ru.fbtw.navigator.rest_api_service.math.Edge;
+import ru.fbtw.navigator.rest_api_service.math.GraphSolver;
 import ru.fbtw.navigator.rest_api_service.navigation.Level;
 import ru.fbtw.navigator.rest_api_service.navigation.Node;
 
+import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Service
-public class FireBaseService {
-    private final String LEVEL = "levels";
-    private final String NODES = "nodes";
-    private final String CONNECTIONS = "connections";
+public class FireBaseService implements PlatformService{
+	private final String LEVEL = "levels";
+	private final String NODES = "nodes";
+	private final String CONNECTIONS = "connections";
 
-    private final Firestore db;
+	private final Firestore db;
 
-    @SneakyThrows
-    public FireBaseService(@Value("${project.id}") String projectId) {
+	@SneakyThrows
+	public FireBaseService(@Value("${project.id}") String projectId) {
+		FirestoreOptions firestoreOptions = FirestoreOptions.getDefaultInstance().toBuilder()
+				.setProjectId(projectId)
+				.setCredentials(GoogleCredentials.getApplicationDefault())
+				.build();
 
-        FirestoreOptions firestoreOptions = FirestoreOptions.getDefaultInstance().toBuilder()
-                .setProjectId(projectId)
-                .setCredentials(GoogleCredentials.getApplicationDefault())
-                .build();
+		db = firestoreOptions.getService();
 
-        db = firestoreOptions.getService();
+	}
 
-    }
+	private void setupCollections(
+			String json,
+			Set<Level> levels,
+			Set<Node> nodes,
+			Set<Edge> edges
+	) {
+		try {
+			GraphJsonParser parser = new GraphJsonParser(json);
+			Map<String, Node> nodesStorage = parser.parse(nodes);
 
-    public void createUser(
-            String userId,
-            Set<Level> levels,
-            Set<Node> nodes,
-            Set<Edge> edges
-    ) {
-        uploadCollection(levels, LEVEL, userId);
-        uploadCollection(nodes, NODES, userId);
-        uploadCollection(edges, CONNECTIONS, userId);
-    }
+			GraphSolver graph = new GraphSolver(nodesStorage, nodes);
 
-    public void remove(String userId) {
-        removeCollection(userId,LEVEL);
-        removeCollection(userId,NODES);
-        removeCollection(userId,CONNECTIONS);
-    }
-
-    public void updateUser(
-            String userId,
-            Set<Level> levels,
-            Set<Node> nodes,
-            Set<Edge> edges
-    ) {
-        remove(userId);
-        createUser(userId, levels, nodes, edges);
-    }
-
-    private void removeCollection(String userId,String type) {
-        CollectionReference collection = db.collection(userId)
-                .document(type)
-                .collection(type);
-        Iterable<DocumentReference> documentReferences = collection.listDocuments();
-
-        log.info("Removing collection for {} type: {}", userId,type);
-
-        for (DocumentReference reference : documentReferences) {
-            try {
-                ApiFuture<WriteResult> delete = reference.delete();
-                log.info("Remove time: {} for doc id: {} user's: {}", delete.get().getUpdateTime(),
-                        reference.getId(), userId);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-                log.error("Error while deleting");
-            }
-
-        }
-    }
+			levels.addAll(graph.getLevels());
+			edges.addAll(graph.getEdges());
 
 
-    private void uploadCollection(Set<? extends Mappable> set, String type, String userId) {
-        CollectionReference collectionReference = db.collection(userId).document(type).collection(type);
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.error("Error while paring json");
+		}
+	}
 
-        for (Mappable object : set) {
-            try {
+	@Override
+	public void updateData(String projectId, String json, boolean isNew) {
+		if (isNew) {
+			createUser(projectId, json);
+		} else {
+			updateUser(projectId, json);
+		}
+	}
 
-                Map<String, Object> map = object.toMap();
+	public void createUser(String projectId, String json) {
 
-                ApiFuture<DocumentReference> result = collectionReference.add(map);
+		Set<Level> levels = new HashSet<>();
+		Set<Node> nodes = new HashSet<>();
+		Set<Edge> edges = new HashSet<>();
+		setupCollections(json, levels, nodes, edges);
 
-                DocumentReference reference = result.get();
-                log.info("Upload doc id: {}  user's: {}", reference.getId(), userId);
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-                log.error("Error while uploading");
-            }
+		createUser(projectId, levels, nodes, edges);
+	}
 
-        }
-    }
+	public void updateUser(String projectId, String json) {
+
+		Set<Level> levels = new HashSet<>();
+		Set<Node> nodes = new HashSet<>();
+		Set<Edge> edges = new HashSet<>();
+		setupCollections(json, levels, nodes, edges);
+
+		updateUser(projectId, levels, nodes, edges);
+	}
+
+	void createUser(
+			String projectId,
+			Set<Level> levels,
+			Set<Node> nodes,
+			Set<Edge> edges
+	) {
+		uploadCollection(levels, LEVEL, projectId);
+		uploadCollection(nodes, NODES, projectId);
+		uploadCollection(edges, CONNECTIONS, projectId);
+	}
+
+	void remove(String projectId) {
+		removeCollection(projectId, LEVEL);
+		removeCollection(projectId, NODES);
+		removeCollection(projectId, CONNECTIONS);
+	}
+
+	public void updateUser(
+			String projectId,
+			Set<Level> levels,
+			Set<Node> nodes,
+			Set<Edge> edges
+	) {
+		remove(projectId);
+		createUser(projectId, levels, nodes, edges);
+	}
+
+	private void removeCollection(String projectId, String type) {
+		CollectionReference collection = db.collection(projectId)
+				.document(type)
+				.collection(type);
+		Iterable<DocumentReference> documentReferences = collection.listDocuments();
+
+		log.info("Removing collection for {} type: {}", projectId, type);
+
+		for (DocumentReference reference : documentReferences) {
+			try {
+				ApiFuture<WriteResult> delete = reference.delete();
+				log.info("Remove time: {} for doc id: {} project's: {}", delete.get().getUpdateTime(),
+						reference.getId(), projectId);
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				log.error("Error while deleting");
+			}
+
+		}
+	}
+
+
+	private void uploadCollection(Set<? extends Mappable> set, String type, String projectId) {
+		CollectionReference collectionReference = db.collection(projectId).document(type).collection(type);
+
+		for (Mappable object : set) {
+			try {
+
+				Map<String, Object> map = object.toMap();
+
+				ApiFuture<DocumentReference> result = collectionReference.add(map);
+
+				DocumentReference reference = result.get();
+				log.info("Upload doc id: {}  project's: {}", reference.getId(), projectId);
+			} catch (InterruptedException | ExecutionException e) {
+				e.printStackTrace();
+				log.error("Error while uploading");
+			}
+
+		}
+	}
 
 }

@@ -1,70 +1,67 @@
 package ru.fbtw.navigator.rest_api_service.service;
 
-
+import com.google.gson.JsonParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.fbtw.navigator.rest_api_service.io.GraphJsonParser;
-import ru.fbtw.navigator.rest_api_service.math.Edge;
-import ru.fbtw.navigator.rest_api_service.math.GraphSolver;
-import ru.fbtw.navigator.rest_api_service.navigation.Level;
-import ru.fbtw.navigator.rest_api_service.navigation.Node;
+import ru.fbtw.navigator.rest_api_service.domain.Platform;
+import ru.fbtw.navigator.rest_api_service.domain.Project;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class UpdateService {
 
-    private Set<Node> nodes;
-    private Set<Edge> edges;
-    private Set<Level> levels;
-    private FireBaseService fireBaseService;
+	private final FireBaseService fireBaseService;
+	private final TelegramService telegramService;
+	private final ProjectService projectService;
 
-    public UpdateService(FireBaseService fireBaseService) {
-        this.fireBaseService = fireBaseService;
-        nodes = new HashSet<>();
-        edges = new HashSet<>();
-        levels = new HashSet<>();
-    }
+	public UpdateService(
+			FireBaseService fireBaseService,
+			TelegramService telegramService,
+			ProjectService projectService
+	) {
+		this.fireBaseService = fireBaseService;
+		this.telegramService = telegramService;
+		this.projectService = projectService;
+	}
 
-    private void clear() {
-        nodes.clear();
-        edges.clear();
-        levels.clear();
-    }
+	public boolean updateMap(Project project, String jsonBody) {
+		String projectId = project.getId().toString();
 
-    public boolean updateMap(String userId, String jsonBody, boolean isNew) {
-        setupCollections(jsonBody);
+		if (project.hasPlatform(Platform.APP)) {
+			boolean isNewFirebase = projectService.isPlatformInited(project, Platform.APP);
+			fireBaseService.updateData(projectId, jsonBody, isNewFirebase);
+			projectService.activatePlatform(project,Platform.APP);
+		}
 
-        if (isNew) {
-            fireBaseService.createUser(userId, levels, nodes, edges);
-        } else {
-            fireBaseService.updateUser(userId, levels, nodes, edges);
-        }
+		if (project.hasPlatform(Platform.TG_BOT)) {
+			try {
+				boolean isNewTelegram = true;
+				telegramService.updateData(projectId, jsonBody, isNewTelegram);
+				projectService.activatePlatform(project,Platform.TG_BOT);
+			}catch (Exception e){
+				log.error("Error while updating bot for project: {}",projectId);
+			}
+		}
+		// todo: пробросить исключения
+		return true;
+	}
 
-        // todo: пробросить исключения
-        return true;
-    }
+	public boolean publish(String jsonBody) {
+		Long projectId = JsonParser.parseString(jsonBody)
+				.getAsJsonObject()
+				.get("id")
+				.getAsLong();
 
-    private void setupCollections(String json) {
-        try {
-            clear();
+		Optional<Project> project = projectService.getProjectById(projectId);
+		if (project.isPresent()) {
+			updateMap(project.get(), jsonBody);
+		} else {
+			log.error("Wrong project id");
+			return false;
+		}
 
-            GraphJsonParser parser = new GraphJsonParser(json);
-            Map<String, Node> nodesStorage = parser.parse(nodes);
-
-            GraphSolver graph = new GraphSolver(nodesStorage, nodes);
-
-            levels = graph.getLevels();
-            edges = graph.getEdges();
-
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            log.error("Error while paring json");
-        }
-    }
+		return false;
+	}
 }

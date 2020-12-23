@@ -13,32 +13,26 @@ import java.util.List;
 @RequestMapping("/api")
 public class RestApiController {
 
-    private final UpdateService parserService;
+    private final UpdateService updateService;
     private final ProjectService projectService;
-    private final RedirectService redirectService;
-    private final ResponseService responseService;
 
     public RestApiController(
-            UpdateService parserService,
-            ProjectService projectService,
-            RedirectService redirectService,
-            ResponseService responseService
+            UpdateService updateService,
+            ProjectService projectService
     ) {
-        this.parserService = parserService;
+        this.updateService = updateService;
         this.projectService = projectService;
-        this.redirectService = redirectService;
-        this.responseService = responseService;
     }
 
-    @RequestMapping("/update_map")
-    public String updateMap(
-            @RequestParam String apiKey,
+    @RequestMapping("/publish_project")
+    public Response publish(
             @RequestBody String jsonBody
     ) {
-        String userId = "";
-        boolean successUpdate = parserService.updateMap(userId, jsonBody, false);
+        if (updateService.publish(jsonBody)) {
+            return new Response("success", 200);
+        }
 
-        return "true";
+        return new Response("Project exist or auth field", 409);
     }
 
     @PostMapping("/create_project")
